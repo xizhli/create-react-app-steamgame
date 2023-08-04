@@ -83,12 +83,12 @@ const newGames = async function (req, res) {
 
 // Route 3: GET /reviews_count/:a/:b
 const reviewsCount = async function (req, res) {
-  const lower_limit = req.params.a;
-  const upper_limit= req.params.b;
+  const a = req.params.a;
+  const b = req.params.b;
   const query3 = `
     SELECT G.id, COUNT(R.text)
     FROM Game G JOIN Review R ON G.id = R.GameID
-    WHERE G.price BETWEEN ${lower_limit} AND ${upper_limit}
+    WHERE G.price BETWEEN ${a} AND ${b}
     GROUP BY G.id;
   `;
 
@@ -130,10 +130,11 @@ const topDevelopers = async function (req, res) {
       FROM Game G JOIN Recommendation R on G.id = R.GameID
       GROUP BY G.id, G.name
       HAVING SUM(R.recommended) > COUNT(R.recommended)*0.8)
-      SELECT Publisher
+      SELECT Developer, COUNT(Developer) AS Count
       FROM recommended_games RG JOIN Creator C ON RG.id = C.GameID
-      GROUP BY Publisher
-      ORDER BY COUNT(Publisher) DESC
+      WHERE Developer <> " Inc."
+      GROUP BY Developer
+      ORDER BY COUNT(Developer) DESC
       LIMIT 5;
   `;
 
@@ -155,7 +156,7 @@ const topPublishers = async function (req, res) {
       FROM Game G JOIN Recommendation R on G.id = R.GameID
       GROUP BY G.id, G.name
       HAVING SUM(R.recommended) > COUNT(R.recommended)*0.8)
-      SELECT Publisher
+      SELECT Publisher, COUNT(Publisher) AS Count
       FROM recommended_games RG JOIN Creator C ON RG.id = C.GameID
       GROUP BY Publisher
       ORDER BY COUNT(Publisher) DESC
@@ -192,29 +193,25 @@ const gameSelection = async function (req, res) {
   });
 };
 
-//Route 8: GET /media_ss/:id
-const media_ss = async function(req, res){
-  
-  const game_id = req.params.id;
-
-  const query8 = `
-  SELECT Screenshots
-  FROM Media
-  WHERE GameID =${game_id}`;
-
-  connection.query(query8, (err, data) => {
-    if (err) {
+const random = async function (req, res) {
+  const query = `
+  SELECT *
+  FROM Game
+  ORDER BY RAND()
+  LIMIT 1
+  `
+  connection.query(query, (err, data) => {
+    if (err){
       console.log(err);
       res.json([]);
     } else {
       res.json(data);
     }
   });
-
 };
 
-
 module.exports = {
+  random,
   popularGames,
   newGames,
   reviewsCount,
