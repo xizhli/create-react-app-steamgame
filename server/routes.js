@@ -146,20 +146,66 @@ const positiveRecommendations = async function (req, res) {
 // Route 5: GET /top_developers
 const topDevelopers = async function (req, res) {
   const query5 = `
-    WITH recommended_games AS (
+  WITH recommended_games AS (
       SELECT G.id, G.name
       FROM Game G JOIN Recommendation R on G.id = R.GameID
       GROUP BY G.id, G.name
       HAVING SUM(R.recommended) > COUNT(R.recommended)*0.8)
-      SELECT Developer, COUNT(Developer) AS Count
-      FROM recommended_games RG JOIN Creator C ON RG.id = C.GameID
-      WHERE Developer <> " Inc."
-      GROUP BY Developer
-      ORDER BY COUNT(Developer) DESC
-      LIMIT 5;
+  SELECT Developer, COUNT(Developer) AS Count
+  FROM recommended_games RG JOIN Creator C ON RG.id = C.GameID
+  WHERE Developer not in (' Inc.','LTD.','Inc.')
+  GROUP BY Developer
+  ORDER BY COUNT(Developer) DESC
+  LIMIT 30;
   `;
 
   connection.query(query5, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
+
+// Route 5.1: GET games when select a developer
+const getGameFromDeveloper = async function (req, res) {
+  const Developer = req.params.Developer;
+  const query51 = `
+  select id, name, Screenshots, Movies, Developer, ifnull(TotalhoursPlayed,0) as TotalHoursPlayed, ifnull(NumOfThumbsUp,0) as NumOfThumbsUp  from
+  (select id, name from Game) G
+  left join
+  (select GameID, Screenshots, Movies from Media) M on G.id = M.GameID
+  left join
+  (select distinct GameID, Developer from Creator) C on G.id = C.GameID
+  left join
+  (select GameID, SUM(hoursPlayed) as TotalhoursPlayed, sum(funny) as NumOfThumbsUp from Recommendation group by GameID) R on G.id = R.GameID
+  where Developer = '${Developer}'
+  order by TotalHoursPlayed desc
+  `;
+
+  connection.query(query51, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
+// Route 5.2: GET reviews when select a game
+const getReviewFromGameID = async function (req, res) {
+  const gameId = req.params.gameId;
+  const query52 = `
+  select text, score, votes from Review
+  where GameID = '${gameId}'
+  order by votes desc
+  `;
+
+  connection.query(query52, (err, data) => {
     if (err) {
       console.log(err);
       res.json([]);
@@ -281,6 +327,8 @@ module.exports = {
   reviewsCount,
   positiveRecommendations,
   topDevelopers,
+  getGameFromDeveloper,
+  getReviewFromGameID,
   topPublishers,
   gameSelection
 };

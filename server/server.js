@@ -16,6 +16,8 @@ app.get('/new_games/:age', routes.newGames);
 app.get('/reviews_count/:a/:b', routes.reviewsCount);
 app.get('/positive_recommendations', routes.positiveRecommendations);
 app.get('/top_developers', routes.topDevelopers);
+app.get('/developer_games/:Developer', routes.getGameFromDeveloper);
+app.get('/reviews/:gameId', routes.getReviewFromGameID);
 app.get('/top_publishers', routes.topPublishers);
 app.get('/game_selection/:threshold', routes.gameSelection);
 app.get('/random', routes.random);

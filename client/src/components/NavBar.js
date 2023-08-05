@@ -43,7 +43,7 @@ export default function NavBar() {
             style={{ width: '150px', marginRight: '10px' }}
           />
           <NavText href='/' text='SreamGame' isMain />
-          <NavText href='/popular_games' text='PopularGames' />
+          <NavText href='/Developer' text='Developer Insight' />
           <NavText href='/Rankings' text='Rankings' />
         </Toolbar>
       </Container>
