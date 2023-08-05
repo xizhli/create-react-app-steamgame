@@ -17,6 +17,8 @@ app.get('/positive_recommendations', routes.positiveRecommendations);
 app.get('/top_developers', routes.topDevelopers);
 app.get('/top_publishers', routes.topPublishers);
 app.get('/game_selection/:threshold', routes.gameSelection);
+app.get('/random', routes.random);
+app.get('/search_games', routes.search_games);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
