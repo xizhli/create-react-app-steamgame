@@ -195,7 +195,7 @@ const gameSelection = async function (req, res) {
 
 const random = async function (req, res) {
   const query = `
-  SELECT *
+  SELECT name
   FROM Game
   ORDER BY RAND()
   LIMIT 1
@@ -210,8 +210,50 @@ const random = async function (req, res) {
   });
 };
 
+const search_games = async function(req, res) {
+
+  const age_low = parseInt(req.query.age_low ?? 0);
+  const age_high = parseInt(req.query.age_high ?? 26);
+  const price_low = parseFloat(req.query.price_low ?? 0);
+  const price_high = parseFloat(req.query.price_high ?? 999);
+  const hoursPlayed_low = parseInt(req.query.hoursPlayed_low ?? 0);
+  const hoursPlayed_high = parseInt(req.query.hoursPlayed_high ?? 999);
+
+  console.log(age_low);
+  console.log(age_high);
+  console.log(price_low);
+  console.log(price_high);
+  console.log(hoursPlayed_low);
+  console.log(hoursPlayed_high);
+
+
+  const title = req.query.title ?? '';
+
+  const explicit = req.query.explicit === 'true' ? 1 : 0;
+
+
+  connection.query(`
+  SELECT DISTINCT G.id, G.name, G.price, TIMESTAMPDIFF(YEAR, G.releaseDate, current_date)AS age
+  From Game G LEFT JOIN Recommendation R on G.id = R.GameID
+  WHERE G.price BETWEEN ${price_low} AND ${price_high}
+  AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
+  AND R.hoursPlayed BETWEEN ${hoursPlayed_low} AND ${hoursPlayed_high}
+  `, (err, data) => {
+    if (err){
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+
+}
+
+
+
 module.exports = {
   random,
+  search_games,
   popularGames,
   newGames,
   reviewsCount,
