@@ -10,9 +10,9 @@ function NavText({ href, text, isMain }) {
       noWrap
       style={{
         marginRight: '30px',
-        fontFamily: 'monospace',
+        fontFamily: 'Arial',
         fontWeight: 700,
-        letterSpacing: '.3rem',
+        letterSpacing: '.1rem',
       }}
     >
       <NavLink
@@ -36,9 +36,9 @@ export default function NavBar() {
     <AppBar position='static'>
       <Container maxWidth='xl'>
         <Toolbar disableGutters>
-          <NavText href='/' text='Game_Page' isMain />
-          <NavText href='/popular_games' text='popular_games' />
-          <NavText href='/songs' text='Rankings' />
+          <NavText href='/' text='GamePage' isMain />
+          <NavText href='/popular_games' text='PopularGames' />
+          <NavText href='/Rankings' text='Rankings' />
         </Toolbar>
       </Container>
     </AppBar>
