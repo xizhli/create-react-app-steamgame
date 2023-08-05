@@ -15,6 +15,27 @@ connection.connect((err) => err && console.log(err));
  * ROUTE HANDLERS *
  ******************/
 
+// Route 0: GET /games get random 30 games to show in main page
+const games = async function (req, res) {
+  const query1 = `
+  select id, name, Screenshots, Movies from
+  (select GameID, Screenshots, Movies from Media where GameID >= rand() * (select max(GameID) from Media)) M
+  left join
+  (select id, name from Game) G
+  on M.GameID = G.id
+  limit 28
+  `;
+
+  connection.query(query1, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
 // Route 1: GET /popular_games
 const popularGames = async function (req, res) {
   const query1 = `
@@ -252,6 +273,7 @@ const search_games = async function(req, res) {
 
 
 module.exports = {
+  games,
   random,
   search_games,
   popularGames,

@@ -36,7 +36,13 @@ export default function NavBar() {
     <AppBar position='static'>
       <Container maxWidth='xl'>
         <Toolbar disableGutters>
-          <NavText href='/' text='GamePage' isMain />
+          {/* Include the logo image here */}
+          <img
+            src={`${process.env.PUBLIC_URL}/logo.png`}
+            alt='Stream Game Logo'
+            style={{ width: '150px', marginRight: '10px' }}
+          />
+          <NavText href='/' text='SreamGame' isMain />
           <NavText href='/popular_games' text='PopularGames' />
           <NavText href='/Rankings' text='Rankings' />
         </Toolbar>
@@ -44,3 +50,4 @@ export default function NavBar() {
     </AppBar>
   );
 }
+
