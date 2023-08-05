@@ -39,10 +39,10 @@ export default function NavBar() {
           {/* Include the logo image here */}
           <img
             src={`${process.env.PUBLIC_URL}/logo.png`}
-            alt='Stream Game Logo'
+            alt='Steam Game Logo'
             style={{ width: '150px', marginRight: '10px' }}
           />
-          <NavText href='/' text='SreamGame' isMain />
+          <NavText href='/' text='SteamGame' isMain />
           <NavText href='/Developer' text='Developer Insight' />
           <NavText href='/Rankings' text='Rankings' />
         </Toolbar>
