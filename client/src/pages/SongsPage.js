@@ -7,43 +7,41 @@ import { formatDuration } from '../helpers/formatter';
 const config = require('../config.json');
 
 export default function SongsPage() {
+
+
+  const[age, setAge] = useState([0,26]);
+  const[price, setPrice] = useState([0, 999]);
+  const[hoursPlayed, setHp] = useState([0,999])
+
   const [pageSize, setPageSize] = useState(10);
   const [data, setData] = useState([]);
   const [selectedSongId, setSelectedSongId] = useState(null);
 
   const [title, setTitle] = useState('');
-  const [duration, setDuration] = useState([60, 660]);
-  const [plays, setPlays] = useState([0, 1100000000]);
-  const [danceability, setDanceability] = useState([0, 1]);
-  const [energy, setEnergy] = useState([0, 1]);
-  const [valence, setValence] = useState([0, 1]);
-  const [explicit, setExplicit] = useState(false);
+
+
+  const [include_recommendation, setExplicit] = useState(false);
 
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/search_songs`)
+    fetch(`http://${config.server_host}:${config.server_port}/search_games`)
       .then(res => res.json())
       .then(resJson => {
-        const songsWithId = resJson.map((song) => ({ id: song.song_id, ...song }));
-        setData(songsWithId);
+        const gamesWithId = resJson.map((game) => ({ id: game.id, ...game }));
+        setData(gamesWithId);
       });
   }, []);
 
   const search = () => {
-    fetch(`http://${config.server_host}:${config.server_port}/search_songs?title=${title}` +
-      `&duration_low=${duration[0]}&duration_high=${duration[1]}` +
-      `&plays_low=${plays[0]}&plays_high=${plays[1]}` +
-      `&danceability_low=${danceability[0]}&danceability_high=${danceability[1]}` +
-      `&energy_low=${energy[0]}&energy_high=${energy[1]}` +
-      `&valence_low=${valence[0]}&valence_high=${valence[1]}` +
-      `&explicit=${explicit}`
+    fetch(`http://${config.server_host}:${config.server_port}/search_games?age_low=${age[0]}` +
+      `&age_high=${age[1]}&price_low=${price[0]}&price_high=${price[1]}&hoursPlayed_low=${hoursPlayed[0]}&hoursPlayed_high=${hoursPlayed[1]}` 
     )
       .then(res => res.json())
       .then(resJson => {
         // DataGrid expects an array of objects with a unique id.
         // To accomplish this, we use a map with spread syntax (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax)
-        const songsWithId = resJson.map((song) => ({ id: song.song_id, ...song }));
-        setData(songsWithId);
-      });
+        const gamesWithId_2 = resJson.map((game) => ({ id: game.id, ...game }));
+        setData(gamesWithId_2);
+      } );
   }
 
   // This defines the columns of the table of songs used by the DataGrid component.
@@ -51,17 +49,12 @@ export default function SongsPage() {
   // LazyTable component. The big difference is we provide all data to the DataGrid component
   // instead of loading only the data we need (which is necessary in order to be able to sort by column)
   const columns = [
-    { field: 'title', headerName: 'Title', width: 300, renderCell: (params) => (
-        <Link onClick={() => setSelectedSongId(params.row.song_id)}>{params.value}</Link>
-    ) },
-    { field: 'duration', headerName: 'Duration' },
-    { field: 'plays', headerName: 'Plays' },
-    { field: 'danceability', headerName: 'Danceability' },
-    { field: 'energy', headerName: 'Energy' },
-    { field: 'valence', headerName: 'Valence' },
-    { field: 'tempo', headerName: 'Tempo' },
-    { field: 'key_mode', headerName: 'Key' },
-    { field: 'explicit', headerName: 'Explicit' },
+    {field: 'id', headerName: 'GameId'},
+    {field: 'name', headerName: 'Name'},
+    {field: 'price', headerName: 'Price'},
+    {field: 'age', headerName: 'Age'},
+    //{field: 'hoursPlayed', headerName: 'HoursPlayed'},
+    //{field: 'reviews', headerName: 'reviews'}
   ]
 
   // This component makes uses of the Grid component from MUI (https://mui.com/material-ui/react-grid/).
@@ -73,74 +66,52 @@ export default function SongsPage() {
   // will automatically lay out all the grid items into rows based on their xs values.
   return (
     <Container>
-      {selectedSongId && <SongCard songId={selectedSongId} handleClose={() => setSelectedSongId(null)} />}
-      <h2>Search Songs</h2>
+      <h2>Search Game</h2>
       <Grid container spacing={6}>
         <Grid item xs={8}>
-          <TextField label='Title' value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%" }}/>
+          <TextField label='Name' value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%" }}/>
         </Grid>
         <Grid item xs={4}>
           <FormControlLabel
-            label='Explicit'
-            control={<Checkbox checked={explicit} onChange={(e) => setExplicit(e.target.checked)} />}
+            label='Include Recommendations'
+            control={<Checkbox checked={include_recommendation} onChange={(e) => setExplicit(e.target.checked)} />}
           />
         </Grid>
         <Grid item xs={6}>
-          <p>Duration</p>
+          <p>Age</p>
           <Slider
-            value={duration}
-            min={60}
-            max={660}
-            step={10}
-            onChange={(e, newValue) => setDuration(newValue)}
-            valueLabelDisplay='auto'
-            valueLabelFormat={value => <div>{formatDuration(value)}</div>}
-          />
-        </Grid>
-        <Grid item xs={6}>
-          <p>Plays (millions)</p>
-          <Slider
-            value={plays}
+            value={age}
             min={0}
-            max={1100000000}
-            step={10000000}
-            onChange={(e, newValue) => setPlays(newValue)}
+            max={26}
+            step={1}
+            onChange={(e, newValue) => setAge(newValue)}
             valueLabelDisplay='auto'
-            valueLabelFormat={value => <div>{value / 1000000}</div>}
+            //valueLabelFormat={value => <div>{formatDuration(value)}</div>}
+          />
+        </Grid>
+        <Grid item xs={6}>
+          <p>Price </p>
+          <Slider
+            value={price}
+            min={0}
+            max={999}
+            step={0.1}
+            onChange={(e, newValue) => setPrice(newValue)}
+            valueLabelDisplay='auto'
+            //valueLabelFormat={value => value.toFixed(2)}
+            //valueLabelFormat={value => <div>{value / 1000000}</div>}
           />
         </Grid>
         {/* TODO (TASK 24): add sliders for danceability, energy, and valence (they should be all in the same row of the Grid) */}
         {/* Hint: consider what value xs should be to make them fit on the same row. Set max, min, and a reasonable step. Is valueLabelFormat is necessary? */}
-        <Grid item xs={4}>
-          <p>Danceability</p>
+        <Grid item xs={6}>
+          <p>HoursPlayed</p>
           <Slider
-            value={danceability}
+            value={hoursPlayed}
             min={0}
-            max={1}
+            max={999}
             step={0.1}
-            onChange={(e, newValue) => setDanceability(newValue)}
-            valueLabelDisplay='auto'
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <p>Energy</p>
-          <Slider
-            value={energy}
-            min={0}
-            max={1}
-            step={0.1}
-            onChange={(e, newValue) => setEnergy(newValue)}
-            valueLabelDisplay='auto'
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <p>Valence</p>
-          <Slider
-            value={valence}
-            min={0}
-            max={1}
-            step={0.1}
-            onChange={(e, newValue) => setValence(newValue)}
+            onChange={(e, newValue) => setHp(newValue)}
             valueLabelDisplay='auto'
           />
         </Grid>
