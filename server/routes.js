@@ -198,12 +198,18 @@ const getGameFromDeveloper = async function (req, res) {
 
 // Route 5.2: GET reviews when select a game
 const getReviewFromGameID = async function (req, res) {
+  const page = req.query.page ? req.query.page : 1;
+  let pageQuery = `;`;
+  const pageSize = req.query.page_size ? req.query.page_size : 10;
+  pageQuery = `LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize};`;
+
   const gameId = req.params.gameId;
   const query52 = `
   select text, score, votes from Review
   where GameID = '${gameId}'
   order by votes desc
-  `;
+  `.concat(" ", pageQuery);
+
 
   connection.query(query52, (err, data) => {
     if (err) {
