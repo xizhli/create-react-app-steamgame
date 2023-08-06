@@ -33,7 +33,7 @@ function NavText({ href, text, isMain }) {
 // props to how it changes the look of the component.
 export default function NavBar() {
   return (
-    <AppBar position='static'>
+    <AppBar position='static' style={{backgroundColor: '#171d25'}}>
       <Container maxWidth='xl'>
         <Toolbar disableGutters>
           {/* Include the logo image here */}
