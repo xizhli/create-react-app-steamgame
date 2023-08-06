@@ -290,40 +290,134 @@ const search_games = async function(req, res) {
   const age_high = parseInt(req.query.age_high ?? 26);
   const price_low = parseFloat(req.query.price_low ?? 0);
   const price_high = parseFloat(req.query.price_high ?? 999);
-  const hoursPlayed_low = parseInt(req.query.hoursPlayed_low ?? 0);
-  const hoursPlayed_high = parseInt(req.query.hoursPlayed_high ?? 999);
+  //const hoursPlayed_low = parseInt(req.query.hoursPlayed_low ?? 0);
+  //const hoursPlayed_high = parseInt(req.query.hoursPlayed_high ?? 999);
+  const include_recommendation = req.query.include_recommendation === 'true' ? 1 : 0;
+  const include_reviews = req.query.include_reviews === 'true' ? 1: 0;
+  //const recBool = req.query.recBool ?? 0;
+  //const revBool = req.query.revBool ?? 0;
+  const gameName = req.query.gameName ?? '';
 
+  const recThres = req.query.rec_threshold ?? 0.8;
+  const revThres = req.query.rev_threshold ?? 0.5;
+
+  /* //For checking if values are passed on
   console.log(age_low);
   console.log(age_high);
   console.log(price_low);
   console.log(price_high);
   console.log(hoursPlayed_low);
   console.log(hoursPlayed_high);
+  console.log(include_recommendation);
+  console.log(include_reviews);
+  console.log(recBool);
+  console.log(revBool);
+  console.log(gameName);
+  */
 
+  if (!include_reviews && !include_recommendation){
+    if (!gameName){
+    connection.query(`
+    SELECT DISTINCT G.id, G.name
+    From Game G 
+    WHERE G.price BETWEEN ${price_low} AND ${price_high}
+    AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
+    `, (err, data) => {
+      if (err){
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data);
+      }})} else{
+        connection.query(`
+        SELECT DISTINCT G.id, G.name
+        From Game G 
+        WHERE G.price BETWEEN ${price_low} AND ${price_high}
+        AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
+        AND G.name LIKE '%${gameName}%'
+        `, (err, data) => {
+          if (err){
+            console.log(err);
+            res.json([]);
+          } else {
+            res.json(data);
+          }})
+      }
 
-  const title = req.query.title ?? '';
+  
+  } else if (include_recommendation && !include_reviews){
 
-  const explicit = req.query.explicit === 'true' ? 1 : 0;
+    connection.query(`
+      SELECT G.id, G.name
+      FROM Game G JOIN Recommendation R on G.id = R.GameID
+      GROUP BY G.id, G.name
+      HAVING SUM(R.recommended) > COUNT(R.recommended)*${recThres};
+    `, (err, data) => {
+      if (err){
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data);
+      }})
+  } else if (!include_recommendation && include_reviews){
 
-
-  connection.query(`
-  SELECT DISTINCT G.id, G.name, G.price, TIMESTAMPDIFF(YEAR, G.releaseDate, current_date)AS age
-  From Game G LEFT JOIN Recommendation R on G.id = R.GameID
-  WHERE G.price BETWEEN ${price_low} AND ${price_high}
-  AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
-  AND R.hoursPlayed BETWEEN ${hoursPlayed_low} AND ${hoursPlayed_high}
+    connection.query(`
+    SELECT G.id, G.name
+    FROM Game G JOIN Review R on G.id = R.GameID
+    GROUP BY G.id, G.name
+    HAVING SUM(R.score) > COUNT(R.score)*${revThres};
   `, (err, data) => {
     if (err){
       console.log(err);
       res.json([]);
     } else {
       res.json(data);
-    }
-  });
+    }})
+
+  } else{ //Take route 1, run 6 minutes
+    connection.query(`
+    WITH dev_popular_games AS (
+      SELECT C.Developer, G.id AS GameID, COUNT(*) as recommend_count
+      FROM Creator C
+      JOIN Game G ON C.GameID = G.id
+      JOIN Recommendation R ON G.id = R.GameID
+      WHERE R.recommended = true
+      GROUP BY C.Developer, G.id
+    ),
+    dev_max_counts AS (
+      SELECT Developer, MAX(recommend_count) as max_count
+      FROM dev_popular_games
+      GROUP BY Developer
+    ),
+    dev_top_games AS (
+      SELECT DPG.Developer, DPG.GameID
+      FROM dev_popular_games DPG
+      JOIN dev_max_counts DMC ON DPG.Developer = DMC.Developer AND
+      DPG.recommend_count = DMC.max_count
+    ),
+    dev_game_avg_stats AS (
+      SELECT DTG.Developer,DTG.GameID, G.name, AVG(G.price) as average_price,
+      AVG(R.score) as average_score, AVG(DPG.recommend_count) as
+      average_recommend_count
+      FROM dev_top_games DTG
+      JOIN Game G ON DTG.GameID = G.id
+      JOIN Review R ON G.id = R.GameID
+      JOIN dev_popular_games DPG ON DTG.GameID = DPG.GameID AND
+      DTG.Developer = DPG.Developer
+      GROUP BY DTG.Developer
+    )
+    SELECT GameID, name FROM dev_game_avg_stats;
+    `, (err, data) => {
+      if (err){
+        console.log(err);
+        res.json([]);
+      } else {
+        res.json(data);
+      }
+    })
+  }
 
 }
-
-
 
 module.exports = {
   games,
