@@ -7,9 +7,11 @@ export default function AppMainPage() {
   const [selectedGame, setSelectedGame] = useState(null);
 
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/games`) 
+    if (games.length === 0) {
+      fetch(`http://${config.server_host}:${config.server_port}/games`) 
       .then((res) => res.json())
       .then((data) => setGames(data)); // Update state variable
+    }
   }, []);
 
   const handleGameClick = (game) => {
