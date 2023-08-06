@@ -173,7 +173,7 @@ const getGameFromDeveloper = async function (req, res) {
   const Developer = req.params.Developer;
   const query51 = `
 WITH devGames AS (
-    SELECT id, name FROM Game G
+    SELECT DISTINCT id, name FROM Game G
     LEFT JOIN Creator C on G.id = C.GameID WHERE Developer = '${Developer}'
 ),
 gameRecs AS (
