@@ -18,11 +18,12 @@ connection.connect((err) => err && console.log(err));
 // Route 0: GET /games get random 30 games to show in main page
 const games = async function (req, res) {
   const query1 = `
-  select id, name, Screenshots, Movies from
-  (select GameID, Screenshots, Movies from Media where GameID >= rand() * (select max(GameID) from Media) limit 28) M
-  left join
-  (select id, name from Game) G
-  on M.GameID = G.id
+WITH randomMedia as (
+    SELECT GameID, Screenshots, Movies FROM Media
+    WHERE GameID >= RAND() * (SELECT MAX(GameID) FROM Media)
+LIMIT 28)
+SELECT id, name, Screenshots, Movies FROM randomMedia RM
+LEFT JOIN Game G on G.id = RM.GameID;
   `;
 
   connection.query(query1, (err, data) => {
