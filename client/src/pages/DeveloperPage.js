@@ -115,7 +115,7 @@ export default function TopDeveloperPage() {
                   {isLoadingReviews ? <CircularProgress /> : selectedGameReviews.map((review) => (
                     <tr key={review.id}>
                       <td style={{ padding: '8px', maxWidth: '300px', overflow: 'scroll', whiteSpace: 'break-spaces', borderBottom: '1px solid'}}>{review.text}</td>
-                      <td style={{ padding: '8px', maxWidth: '300px', borderBottom: '1px solid', backgroundColor: review.score > 0 ? 'green' : 'red' }}>{review.score}</td>
+                      <td style={{ padding: '8px', maxWidth: '300px', borderBottom: '1px solid', backgroundColor: review.score > 0 ? 'green' : 'red', textAlign: "center" }}>{review.score > 0 ? "Positive" : "Negative"}</td>
                     </tr>
                   ))}
                 </tbody>
