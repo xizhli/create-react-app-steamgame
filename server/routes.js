@@ -19,11 +19,10 @@ connection.connect((err) => err && console.log(err));
 const games = async function (req, res) {
   const query1 = `
   select id, name, Screenshots, Movies from
-  (select GameID, Screenshots, Movies from Media where GameID >= rand() * (select max(GameID) from Media)) M
+  (select GameID, Screenshots, Movies from Media where GameID >= rand() * (select max(GameID) from Media) limit 28) M
   left join
   (select id, name from Game) G
   on M.GameID = G.id
-  limit 28
   `;
 
   connection.query(query1, (err, data) => {
@@ -146,17 +145,15 @@ const positiveRecommendations = async function (req, res) {
 // Route 5: GET /top_developers
 const topDevelopers = async function (req, res) {
   const query5 = `
-  WITH recommended_games AS (
-      SELECT G.id, G.name
-      FROM Game G JOIN Recommendation R on G.id = R.GameID
-      GROUP BY G.id, G.name
-      HAVING SUM(R.recommended) > COUNT(R.recommended)*0.8)
-  SELECT Developer, COUNT(Developer) AS Count
-  FROM recommended_games RG JOIN Creator C ON RG.id = C.GameID
-  WHERE Developer not in (' Inc.','LTD.','Inc.')
-  GROUP BY Developer
-  ORDER BY COUNT(Developer) DESC
-  LIMIT 30;
+WITH recommended_games AS (
+    SELECT GameID, SUM(recommended) as sumRecommended, COUNT(recommended) as countRecommended
+    FROM Recommendation GROUP BY GameID HAVING sumRecommended > countRecommended * 0.8)
+SELECT Developer
+FROM recommended_games R LEFT JOIN Creator C ON R.GameID = C.GameID
+WHERE Developer not in (' Inc.','LTD.','Inc.')
+GROUP BY Developer
+ORDER BY COUNT(Developer) DESC
+LIMIT 30;
   `;
 
   connection.query(query5, (err, data) => {
