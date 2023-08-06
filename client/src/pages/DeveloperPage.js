@@ -34,7 +34,7 @@ export default function TopDeveloperPage() {
 
   const handleClosePopup = () => {
     setSelectedGame(null);
-    // setSelectedGameReviews(null)
+    setSelectedGameReviews([]);
   };
 
   return (
@@ -101,18 +101,14 @@ export default function TopDeveloperPage() {
                 <thead style={{ textAlign: 'left', borderBottom: '1px solid lightgray' }}>
                     <tr>
                     <th style={{ padding: '8px', maxWidth: '300px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>Review</th>
-                    <th style={{ padding: '8px' }}>Score</th>
-                    <th style={{ padding: '8px' }}>Votes</th>
+                    <th style={{ padding: '8px', maxWidth: '300px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>Score</th>
                     </tr>
                 </thead>
                 <tbody>
                   {selectedGameReviews.map((review) => (
                     <tr key={review.id}>
-                      <td style={{ padding: '8px', maxWidth: '300px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                        {review.text}
-                      </td>
-                      <td style={{ padding: '8px' }}>{review.score}</td>
-                      <td style={{ padding: '8px' }}>{review.votes}</td>
+                      <td style={{ padding: '8px', maxWidth: '300px', overflow: 'scroll', whiteSpace: 'break-spaces', borderBottom: '1px solid'}}>{review.text}</td>
+                      <td style={{ padding: '8px', maxWidth: '300px', borderBottom: '1px solid', backgroundColor: review.score > 0 ? 'green' : 'red' }}>{review.score}</td>
                     </tr>
                   ))}
                 </tbody>
