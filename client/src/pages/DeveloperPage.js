@@ -19,6 +19,7 @@ export default function TopDeveloperPage() {
 
   const handleDeveloperSelect = (developer) => {
     setSelectedDeveloper(developer);
+    setDeveloperGames([]);
     setSelectedGame(null); // Clear selected game when a new developer is selected
     fetch(`http://${config.server_host}:${config.server_port}/developer_games/${developer.Developer}`)
       .then((res) => res.json())

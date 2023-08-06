@@ -172,16 +172,19 @@ LIMIT 30;
 const getGameFromDeveloper = async function (req, res) {
   const Developer = req.params.Developer;
   const query51 = `
-  select id, name, Screenshots, Movies, Developer, ifnull(TotalhoursPlayed,0) as TotalHoursPlayed, ifnull(NumOfThumbsUp,0) as NumOfThumbsUp  from
-  (select id, name from Game) G
-  left join
-  (select GameID, Screenshots, Movies from Media) M on G.id = M.GameID
-  left join
-  (select distinct GameID, Developer from Creator) C on G.id = C.GameID
-  left join
-  (select GameID, SUM(hoursPlayed) as TotalhoursPlayed, sum(funny) as NumOfThumbsUp from Recommendation group by GameID) R on G.id = R.GameID
-  where Developer = '${Developer}'
-  order by TotalHoursPlayed desc
+WITH devGames AS (
+    SELECT id, name FROM Game G
+    LEFT JOIN Creator C on G.id = C.GameID WHERE Developer = '${Developer}'
+),
+gameRecs AS (
+    SELECT GameID, SUM(hoursPlayed) as TotalHoursPlayed, SUM(funny) as NumOfThumbsUp FROM Recommendation
+    WHERE GameID IN (SELECT id FROM devGames)
+    GROUP BY GameID
+)
+SELECT id, name, Screenshots, Movies, IFNULL(TotalHoursPlayed,0) as TotalHoursPlayed, IFNULL(NumOfThumbsUp,0) as NumOfThumbsUp FROM devGames
+LEFT JOIN Media M ON M.GameID = id
+LEFT JOIN gameRecs GR ON GR.GameID = id
+ORDER BY TotalHoursPlayed DESC;
   `;
 
   connection.query(query51, (err, data) => {
