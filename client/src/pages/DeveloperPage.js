@@ -10,9 +10,11 @@ export default function TopDeveloperPage() {
   const [selectedGameReviews, setSelectedGameReviews] = useState([]); 
 
   useEffect(() => {
-    fetch(`http://${config.server_host}:${config.server_port}/top_developers`)
-      .then((res) => res.json())
-      .then((data) => setDevelopers(data));
+    if (developers.length === 0) {
+      fetch(`http://${config.server_host}:${config.server_port}/top_developers`)
+        .then((res) => res.json())
+        .then((data) => setDevelopers(data));
+    }
   }, []);
 
   const handleDeveloperSelect = (developer) => {
