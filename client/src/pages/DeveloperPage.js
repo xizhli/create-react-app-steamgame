@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, Dialog, DialogContent } from '@mui/material';
+import { Container, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, Dialog, DialogContent, CircularProgress } from '@mui/material';
 import config from '../config.json';
 
 export default function TopDeveloperPage() {
@@ -7,7 +7,9 @@ export default function TopDeveloperPage() {
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [developerGames, setDeveloperGames] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [selectedGameReviews, setSelectedGameReviews] = useState([]); 
+  const [selectedGameReviews, setSelectedGameReviews] = useState([]);
+  const [isLoadingDeveloperGames, setIsLoadingDeveloperGames] = useState(true);
+  const [isLoadingReviews, setIsLoadingReviews] = useState(true);
 
   useEffect(() => {
     if (developers.length === 0) {
@@ -20,17 +22,21 @@ export default function TopDeveloperPage() {
   const handleDeveloperSelect = (developer) => {
     setSelectedDeveloper(developer);
     setDeveloperGames([]);
+    setIsLoadingDeveloperGames(true);
     setSelectedGame(null); // Clear selected game when a new developer is selected
     fetch(`http://${config.server_host}:${config.server_port}/developer_games/${developer.Developer}`)
       .then((res) => res.json())
-      .then((data) => setDeveloperGames(data));
+      .then((data) => setDeveloperGames(data))
+      .then(() => setTimeout(() => {setIsLoadingDeveloperGames(false)}, 100));
   };
 
   const handleGameClick = async (game) => {
     setSelectedGame(game);
+    setIsLoadingReviews(true);
     fetch(`http://${config.server_host}:${config.server_port}/reviews/${game.id}`)
         .then((res) => res.json())
-        .then((data) => setSelectedGameReviews(data));
+        .then((data) => setSelectedGameReviews(data))
+        .then(() => setTimeout(() => {setIsLoadingReviews(false)}, 100));
   };
 
   const handleClosePopup = () => {
@@ -65,7 +71,7 @@ export default function TopDeveloperPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {developerGames.map((game, index) => (
+                {isLoadingDeveloperGames ? <CircularProgress /> : developerGames.map((game, index) => (
                   <TableRow key={game.id} onClick={() => handleGameClick(game)}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
@@ -106,7 +112,7 @@ export default function TopDeveloperPage() {
                     </tr>
                 </thead>
                 <tbody>
-                  {selectedGameReviews.map((review) => (
+                  {isLoadingReviews ? <CircularProgress /> : selectedGameReviews.map((review) => (
                     <tr key={review.id}>
                       <td style={{ padding: '8px', maxWidth: '300px', overflow: 'scroll', whiteSpace: 'break-spaces', borderBottom: '1px solid'}}>{review.text}</td>
                       <td style={{ padding: '8px', maxWidth: '300px', borderBottom: '1px solid', backgroundColor: review.score > 0 ? 'green' : 'red' }}>{review.score}</td>

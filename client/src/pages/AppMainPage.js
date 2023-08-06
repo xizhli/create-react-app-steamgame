@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Container, AppBar, Dialog, DialogContent, Grid } from '@mui/material';
+import { Container, AppBar, Dialog, DialogContent, Grid, CircularProgress } from '@mui/material';
 import config from '../config.json';
 
 export default function AppMainPage() {
   const [games, setGames] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
+  const [isLoadingGames, setIsLoadingGames] = useState(true);
 
   useEffect(() => {
-    if (games.length === 0) {
+    setIsLoadingGames(true);
       fetch(`http://${config.server_host}:${config.server_port}/games`) 
       .then((res) => res.json())
-      .then((data) => setGames(data)); // Update state variable
-    }
+      .then((data) => setGames(data))
+      .then(() => setTimeout(() => {setIsLoadingGames(false)}, 1));
   }, []);
 
   const handleGameClick = (game) => {
@@ -29,7 +30,7 @@ export default function AppMainPage() {
       <Container>
         <h2>Games</h2>
         <Grid container spacing={3}>
-          {games.map((game) => (
+          {isLoadingGames ? <CircularProgress /> : games.map((game) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={game.id}>
               <img
                 src={game.Screenshots}
