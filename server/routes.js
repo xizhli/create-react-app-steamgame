@@ -284,51 +284,67 @@ const random = async function (req, res) {
   });
 };
 
-const getAllGames = async function(req, res) {
-  const pageSize = 20; // number of records per page
-  const page = req.query.page ? parseInt(req.query.page) : 1;
-  const offset = (page - 1) * pageSize;
+const getAllGames = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 20;
+  const offset = (page - 1) * limit;
+  const showTags = req.query.showTags === 'true';
 
-  const query = `
-    SELECT id, name FROM Game ORDER BY name ASC LIMIT ${pageSize} OFFSET ${offset};
-  `;
+  let query;
 
-  connection.query(query, (err, data) => {
-    if (err) {
-      console.log("Error fetching paginated games:", err);
-      res.json([]);
-    } else {
-      res.json(data);
-    }
+  if (showTags) {
+      query = `
+          SELECT G.id, G.name, GROUP_CONCAT(T.Tag ORDER BY T.Tag ASC SEPARATOR ', ') AS Tag
+          FROM Game G 
+          LEFT JOIN Tags T ON G.id = T.GameID
+          GROUP BY G.id, G.name
+          LIMIT ? OFFSET ?
+      `;
+  } else {
+      query = `
+          SELECT G.id, G.name
+          FROM Game G 
+          LIMIT ? OFFSET ?
+      `;
+  }
+
+  connection.query(query, [limit, offset], (err, results) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Internal Server Error' });
+      }
+      res.json(results);
   });
 };
 
 
-const getGameDetails = async function(req, res) {
+const getGameDetails = async (req, res) => {
   const gameId = req.params.gameId;
+
   const query = `
-    SELECT 
-      G.*, 
-      M.Screenshots,
-      AVG(R.score) as average_score,
-      SUM(R.votes) as total_votes
-    FROM Game G 
-    LEFT JOIN Media M ON G.id = M.GameID
-    LEFT JOIN Review R ON G.id = R.GameID
-    WHERE G.id = ${gameId}
-    GROUP BY G.id;
+      SELECT G.id, G.name, M.Screenshots, G.price, Gen.Genre, T.Tag, G.releaseDate, C.Category, 
+             AVG(R.score) AS average_score, COUNT(R.votes) AS total_votes
+      FROM Game G
+      LEFT JOIN Media M ON G.id = M.GameID
+      LEFT JOIN Genres Gen ON G.id = Gen.GameID
+      LEFT JOIN Tags T ON G.id = T.GameID
+      LEFT JOIN Categories C ON G.id = C.GameID
+      LEFT JOIN Review R ON G.id = R.GameID
+      WHERE G.id = ?
+      GROUP BY G.id;
   `;
 
-  connection.query(query, (err, data) => {
-    if (err) {
-      console.log(err);
-      res.json([]);
-    } else {
-      res.json(data[0]);
-    }
+  connection.query(query, [gameId], (err, results) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Internal Server Error' });
+      }
+      if (results.length === 0) {
+          return res.status(404).json({ error: 'Game not found' });
+      }
+      res.json(results[0]);
   });
 };
-
 
 const search_games = async function(req, res) {
 
