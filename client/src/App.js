@@ -7,6 +7,7 @@ import NavBar from './components/NavBar';
 import AppMainPage from './pages/AppMainPage';
 import DeveloperPage from './pages/DeveloperPage';
 import RankingsPage from './pages/RankingsPage';
+import GameAnalysisDashboard from './pages/GameAnalysisDashboard';
 
 // createTheme enables you to customize the look and feel of your app past the default
 // in this case, we only change the color scheme
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/" element={<AppMainPage />} /> 
           {<Route path="/Developer" element={<DeveloperPage />} /> }
           {<Route path='/Rankings' element={<RankingsPage/>}/>}
+          {<Route path="/game-analysis" element={<GameAnalysisDashboard/>} />}
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
