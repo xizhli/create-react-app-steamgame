@@ -8,16 +8,24 @@ function GameAnalysisDashboard() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
     const [showTags, setShowTags] = useState(false);
+    const [showGenres, setShowGenres] = useState(false);
+    const [showCategories, setShowCategories] = useState(false);
 
     useEffect(() => {
         let url = `http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`;
         if (showTags) {
             url += '&showTags=true';
         }
+        if (showGenres) {
+            url += '&showGenres=true';
+        }
+        if (showCategories) {
+            url += '&showCategories=true';
+        }
         axios.get(url).then(response => {
             setGames(response.data);
         });
-    }, [currentPage, showTags]);
+    }, [currentPage, showTags, showGenres, showCategories]);
     
 
     const handleGameClick = (game) => {
@@ -36,6 +44,12 @@ function GameAnalysisDashboard() {
             <button onClick={() => setShowTags(prevShow => !prevShow)}>
                 Tag Analysis
             </button> 
+            <button onClick={() => setShowGenres(prevShow => !prevShow)}>
+                Genre Analysis
+            </button>
+            <button onClick={() => setShowCategories(prevShow => !prevShow)}>
+                Category Analysis
+            </button>
             <TableContainer>
                 <Table>
                     <TableHead>
@@ -43,6 +57,8 @@ function GameAnalysisDashboard() {
                             <TableCell>ID</TableCell>
                             <TableCell>Name</TableCell>
                             {showTags && <TableCell>Tag</TableCell>}
+                            {showGenres && <TableCell>Genre</TableCell>}
+                            {showCategories && <TableCell>Category</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -51,6 +67,8 @@ function GameAnalysisDashboard() {
                                 <TableCell>{game.id}</TableCell>
                                 <TableCell>{game.name}</TableCell>
                                 {showTags && <TableCell>{game.Tag}</TableCell>}
+                                {showGenres && <TableCell>{game.Genre}</TableCell>}
+                                {showCategories && <TableCell>{game.Category}</TableCell>}
                             </TableRow>
                         ))}
                     </TableBody>
