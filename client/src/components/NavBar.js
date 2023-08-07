@@ -44,7 +44,7 @@ export default function NavBar() {
           />
           <NavText href='/' text='SteamGame' isMain />
           <NavText href='/Developer' text='Developer Insight' />
-          <NavText href='/Rankings' text='Rankings' />
+          <NavText href='/Rankings' text='Ranking Search' />
           <NavText href='/game-analysis' text='Game Analysis Dashboard' />
         </Toolbar>
       </Container>
