@@ -22,6 +22,9 @@ app.get('/top_publishers', routes.topPublishers);
 app.get('/game_selection/:threshold', routes.gameSelection);
 app.get('/random', routes.random);
 app.get('/search_games', routes.search_games);
+app.get('/allgames', routes.getAllGames);
+app.get('/gamedetails/:gameId', routes.getGameDetails);
+
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
