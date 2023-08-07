@@ -419,10 +419,13 @@ const search_games = async function(req, res) {
   } else if (!include_recommendation && include_reviews){
 
     connection.query(`
-    SELECT G.id, G.name
-    FROM Game G JOIN Review R on G.id = R.GameID
-    GROUP BY G.id, G.name
-    HAVING SUM(R.score) > COUNT(R.score)*${revThres};
+    WITH fr as(
+      SELECT GameID
+      FROM m_Review
+      GROUP BY GameID
+      HAVING sum(score) > COUNT(score)*${revThres})
+      SELECT G.id, G.name
+      FROM Game G JOIN fr ON  fr.GameID=G.id 
   `, (err, data) => {
     if (err){
       console.log(err);
