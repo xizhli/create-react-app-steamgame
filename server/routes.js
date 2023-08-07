@@ -480,10 +480,44 @@ const getTags = async function (req, res) {
   });
 };
 
+const getGenres = async function (req, res) {
+  const query = `
+  SELECT DISTINCT Genre
+  FROM Genres
+  ORDER BY Genre
+  `
+  connection.query(query, (err, data) => {
+    if (err){
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
+const getCategories = async function (req, res) {
+  const query = `
+  SELECT DISTINCT Category
+  FROM Categories
+  ORDER BY Category
+  `
+  connection.query(query, (err, data) => {
+    if (err){
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
 module.exports = {
   games,
   random,
   getTags,
+  getGenres,
+  getCategories,
   search_games,
   popularGames,
   newGames,
