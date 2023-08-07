@@ -7,12 +7,18 @@ function GameAnalysisDashboard() {
     const [selectedGame, setSelectedGame] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
+    const [showTags, setShowTags] = useState(false);
 
     useEffect(() => {
-        axios.get(`http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`).then(response => {
+        let url = `http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`;
+        if (showTags) {
+            url += '&showTags=true';
+        }
+        axios.get(url).then(response => {
             setGames(response.data);
         });
-    }, [currentPage]);
+    }, [currentPage, showTags]);
+    
 
     const handleGameClick = (game) => {
         axios.get(`http://localhost:8080/gamedetails/${game.id}`).then(response => {
@@ -27,12 +33,16 @@ function GameAnalysisDashboard() {
     return (
         <Container>
             <h2>Game Analysis Dashboard</h2>
+            <button onClick={() => setShowTags(prevShow => !prevShow)}>
+                Tag Analysis
+            </button> 
             <TableContainer>
                 <Table>
                     <TableHead>
                         <TableRow>
                             <TableCell>ID</TableCell>
                             <TableCell>Name</TableCell>
+                            {showTags && <TableCell>Tag</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -40,12 +50,14 @@ function GameAnalysisDashboard() {
                             <TableRow key={game.id} onClick={() => handleGameClick(game)}>
                                 <TableCell>{game.id}</TableCell>
                                 <TableCell>{game.name}</TableCell>
+                                {showTags && <TableCell>{game.Tag}</TableCell>}
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
 
+            
             <button onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}>
                 Previous
             </button>
