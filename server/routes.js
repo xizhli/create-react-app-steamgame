@@ -289,24 +289,34 @@ const getAllGames = async (req, res) => {
   const limit = 20;
   const offset = (page - 1) * limit;
   const showTags = req.query.showTags === 'true';
+  const showGenres = req.query.showGenres === 'true';
+  const showCategories = req.query.showCategories === 'true';
 
-  let query;
+  let selectClause = "SELECT G.id, G.name";
+  let joinClause = "FROM Game G";
+  let groupByClause = "GROUP BY G.id, G.name";
 
   if (showTags) {
-      query = `
-          SELECT G.id, G.name, GROUP_CONCAT(T.Tag ORDER BY T.Tag ASC SEPARATOR ', ') AS Tag
-          FROM Game G 
-          LEFT JOIN Tags T ON G.id = T.GameID
-          GROUP BY G.id, G.name
-          LIMIT ? OFFSET ?
-      `;
-  } else {
-      query = `
-          SELECT G.id, G.name
-          FROM Game G 
-          LIMIT ? OFFSET ?
-      `;
+      selectClause += ', GROUP_CONCAT(DISTINCT T.Tag ORDER BY T.Tag ASC SEPARATOR \', \') AS Tag';
+      joinClause += ' LEFT JOIN Tags T ON G.id = T.GameID';
   }
+
+  if (showGenres) {
+      selectClause += ', GROUP_CONCAT(DISTINCT GE.Genre ORDER BY GE.Genre ASC SEPARATOR \', \') AS Genre';
+      joinClause += ' LEFT JOIN Genres GE ON G.id = GE.GameID';
+  }
+
+  if (showCategories) {
+      selectClause += ', GROUP_CONCAT(DISTINCT C.Category ORDER BY C.Category ASC SEPARATOR \', \') AS Category';
+      joinClause += ' LEFT JOIN Categories C ON G.id = C.GameID';
+  }
+
+  const query = `
+      ${selectClause}
+      ${joinClause}
+      ${groupByClause}
+      LIMIT ? OFFSET ?
+  `;
 
   connection.query(query, [limit, offset], (err, results) => {
       if (err) {
