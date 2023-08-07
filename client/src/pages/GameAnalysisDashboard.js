@@ -1,60 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Container, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, Dialog, DialogContent } from '@mui/material';
 
 function GameAnalysisDashboard() {
     const [games, setGames] = useState([]);
     const [selectedGame, setSelectedGame] = useState(null);
-    const [page, setPage] = useState(1); // New state for tracking current page
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
 
     useEffect(() => {
-        axios.get(`http://localhost:8080/allgames?page=${page}`).then(response => {
+        axios.get(`http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`).then(response => {
             setGames(response.data);
         });
-    }, [page]); // Add page to the dependency array
+    }, [currentPage]);
 
-    const handleGameClick = (gameId) => {
-        axios.get(`http://localhost:8080/gamedetails/${gameId}`).then(response => {
+    const handleGameClick = (game) => {
+        axios.get(`http://localhost:8080/gamedetails/${game.id}`).then(response => {
             setSelectedGame(response.data);
         });
+    };    
+
+    const handleClosePopup = () => {
+        setSelectedGame(null);
     };
 
     return (
-        <div className="game-analysis-dashboard">
+        <Container>
             <h2>Game Analysis Dashboard</h2>
-            <ul>
-                {games.map(game => (
-                    <li key={game.id} onClick={() => handleGameClick(game.id)}>
-                        {game.name}
-                    </li>
-                ))}
-            </ul>
-            
-            {/* Pagination controls */}
-            <button onClick={() => setPage(prev => Math.max(prev - 1, 1))}>Previous</button>
-            <button onClick={() => setPage(prev => prev + 1)}>Next</button>
+            <TableContainer>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>ID</TableCell>
+                            <TableCell>Name</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {games.map(game => (
+                            <TableRow key={game.id} onClick={() => handleGameClick(game)}>
+                                <TableCell>{game.id}</TableCell>
+                                <TableCell>{game.name}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-            {selectedGame && (
-                <div className="game-details">
-                    <h2>Game Analysis Dashboard</h2>
-                    {selectedGame.Screenshots && (
-                        <img 
-                            src={selectedGame.Screenshots.split(',')[0]} 
-                            alt="Game Screenshot" 
-                            style={{ width: '300px', height: 'auto' }} 
-                        />
+            <button onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}>
+                Previous
+            </button>
+            <button onClick={() => setCurrentPage(prevPage => prevPage + 1)}>
+                Next
+            </button>
+
+            <Dialog open={selectedGame !== null} onClose={handleClosePopup} maxWidth="md" fullWidth>
+                <DialogContent>
+                    {selectedGame && (
+                        <div>
+                            <img 
+                                src={selectedGame.Screenshots.split(',')[0]} 
+                                alt="Game Screenshot" 
+                                style={{ width: '300px', height: 'auto' }} 
+                            />
+                            <h3>{selectedGame.name}</h3>
+                            <p>ID: {selectedGame.id}</p>
+                            <p>Price: {selectedGame.price}</p>
+                            <p>Genre: {selectedGame.Genre}</p>
+                            <p>Tag: {selectedGame.Tag}</p>
+                            <p>Release Date: {selectedGame.releaseDate}</p>
+                            <p>Category: {selectedGame.Category}</p>
+                            <p>Average Score: {selectedGame.average_score}</p>
+                            <p>Total Votes: {selectedGame.total_votes}</p>
+                        </div>
                     )}
-                    <h3>{selectedGame.name}</h3>
-                    <p>ID: {selectedGame.id}</p>
-                    <p>Price: {selectedGame.price}</p>
-                    <p>Genre: {selectedGame.Genre}</p>
-                    <p>Tag: {selectedGame.Tag}</p>
-                    <p>Release Date: {selectedGame.releaseDate}</p>
-                    <p>Category: {selectedGame.Category}</p>
-                    <p>Score: {selectedGame.score}</p>
-                    <p>Votes: {selectedGame.votes}</p>
-                </div>
-            )}
-        </div>
+                </DialogContent>
+            </Dialog>
+        </Container>
     );
 }
 
