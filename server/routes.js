@@ -419,6 +419,51 @@ const search_games = async function(req, res) {
 
 }
 
+const getAllGames = async function(req, res) {
+  const pageSize = 20; // number of records per page
+  const page = req.query.page ? parseInt(req.query.page) : 1;
+  const offset = (page - 1) * pageSize;
+
+  const query = `
+    SELECT id, name FROM Game ORDER BY name ASC LIMIT ${pageSize} OFFSET ${offset};
+  `;
+
+  connection.query(query, (err, data) => {
+    if (err) {
+      console.log("Error fetching paginated games:", err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
+
+const getGameDetails = async function(req, res) {
+  const gameId = req.params.gameId;
+  const query = `
+    SELECT 
+      G.*, 
+      M.Screenshots,
+      AVG(R.score) as average_score,
+      SUM(R.votes) as total_votes
+    FROM Game G 
+    LEFT JOIN Media M ON G.id = M.GameID
+    LEFT JOIN Review R ON G.id = R.GameID
+    WHERE G.id = ${gameId}
+    GROUP BY G.id;
+  `;
+
+  connection.query(query, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data[0]);
+    }
+  });
+};
+
 module.exports = {
   games,
   random,
@@ -431,5 +476,7 @@ module.exports = {
   getGameFromDeveloper,
   getReviewFromGameID,
   topPublishers,
-  gameSelection
+  gameSelection,
+  getAllGames,
+  getGameDetails
 };
