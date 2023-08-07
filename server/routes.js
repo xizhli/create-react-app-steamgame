@@ -464,9 +464,26 @@ const getGameDetails = async function(req, res) {
   });
 };
 
+const getTags = async function (req, res) {
+  const query = `
+  SELECT DISTINCT Tag
+  FROM Tags
+  ORDER BY Tag
+  `
+  connection.query(query, (err, data) => {
+    if (err){
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
 module.exports = {
   games,
   random,
+  getTags,
   search_games,
   popularGames,
   newGames,
