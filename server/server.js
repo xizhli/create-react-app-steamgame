@@ -25,6 +25,8 @@ app.get('/search_games', routes.search_games);
 app.get('/allgames', routes.getAllGames);
 app.get('/gamedetails/:gameId', routes.getGameDetails);
 app.get('/getTags', routes.getTags);
+app.get('/getGenres', routes.getGenres);
+app.get('/getCategories', routes.getCategories);
 
 
 app.listen(config.server_port, () => {
