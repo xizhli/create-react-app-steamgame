@@ -284,6 +284,52 @@ const random = async function (req, res) {
   });
 };
 
+const getAllGames = async function(req, res) {
+  const pageSize = 20; // number of records per page
+  const page = req.query.page ? parseInt(req.query.page) : 1;
+  const offset = (page - 1) * pageSize;
+
+  const query = `
+    SELECT id, name FROM Game ORDER BY name ASC LIMIT ${pageSize} OFFSET ${offset};
+  `;
+
+  connection.query(query, (err, data) => {
+    if (err) {
+      console.log("Error fetching paginated games:", err);
+      res.json([]);
+    } else {
+      res.json(data);
+    }
+  });
+};
+
+
+const getGameDetails = async function(req, res) {
+  const gameId = req.params.gameId;
+  const query = `
+    SELECT 
+      G.*, 
+      M.Screenshots,
+      AVG(R.score) as average_score,
+      SUM(R.votes) as total_votes
+    FROM Game G 
+    LEFT JOIN Media M ON G.id = M.GameID
+    LEFT JOIN Review R ON G.id = R.GameID
+    WHERE G.id = ${gameId}
+    GROUP BY G.id;
+  `;
+
+  connection.query(query, (err, data) => {
+    if (err) {
+      console.log(err);
+      res.json([]);
+    } else {
+      res.json(data[0]);
+    }
+  });
+};
+
+
 const search_games = async function(req, res) {
 
   const age_low = parseInt(req.query.age_low ?? 0);
@@ -313,7 +359,12 @@ const search_games = async function(req, res) {
   console.log(recBool);
   console.log(revBool);
   console.log(gameName);
+  console.log(req.query.Tags.split(","));
   */
+
+  const Tags = req.query.Tags != '' ? req.query.Tags: 1 //.split(",");
+  const Genres = req.query.Genres  != '' ? req.query.Genres: 1//.split(",");
+  const Categories = req.query.Categories != '' ? req.query.Categories: 1 //.split(",");
 
   if (!include_reviews && !include_recommendation){
     if (!gameName){
@@ -322,6 +373,9 @@ const search_games = async function(req, res) {
     From Game G 
     WHERE G.price BETWEEN ${price_low} AND ${price_high}
     AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
+    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = 1))
+    AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = 1 ))
+    AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = 1 ))
     `, (err, data) => {
       if (err){
         console.log(err);
@@ -335,6 +389,9 @@ const search_games = async function(req, res) {
         WHERE G.price BETWEEN ${price_low} AND ${price_high}
         AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
         AND G.name LIKE '%${gameName}%'
+        AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = 1))
+        AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = 1 ))
+        AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = 1 ))
         `, (err, data) => {
           if (err){
             console.log(err);
@@ -418,51 +475,6 @@ const search_games = async function(req, res) {
   }
 
 }
-
-const getAllGames = async function(req, res) {
-  const pageSize = 20; // number of records per page
-  const page = req.query.page ? parseInt(req.query.page) : 1;
-  const offset = (page - 1) * pageSize;
-
-  const query = `
-    SELECT id, name FROM Game ORDER BY name ASC LIMIT ${pageSize} OFFSET ${offset};
-  `;
-
-  connection.query(query, (err, data) => {
-    if (err) {
-      console.log("Error fetching paginated games:", err);
-      res.json([]);
-    } else {
-      res.json(data);
-    }
-  });
-};
-
-
-const getGameDetails = async function(req, res) {
-  const gameId = req.params.gameId;
-  const query = `
-    SELECT 
-      G.*, 
-      M.Screenshots,
-      AVG(R.score) as average_score,
-      SUM(R.votes) as total_votes
-    FROM Game G 
-    LEFT JOIN Media M ON G.id = M.GameID
-    LEFT JOIN Review R ON G.id = R.GameID
-    WHERE G.id = ${gameId}
-    GROUP BY G.id;
-  `;
-
-  connection.query(query, (err, data) => {
-    if (err) {
-      console.log(err);
-      res.json([]);
-    } else {
-      res.json(data[0]);
-    }
-  });
-};
 
 const getTags = async function (req, res) {
   const query = `
