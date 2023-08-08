@@ -21,6 +21,9 @@ function GameAnalysisDashboard() {
     const [popularTags, setPopularTags] = useState([]);
     const [popularGenres, setPopularGenres] = useState([]);
     const [popularCategories, setPopularCategories] = useState([]);
+    const [showRecommendations, setShowRecommendations] = useState(false);
+    const [bestGames, setBestGames] = useState([]);
+    const [costEffectiveGames, setCostEffectiveGames] = useState([]);
 
     useEffect(() => {
         let url = `http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`;
@@ -85,6 +88,18 @@ function GameAnalysisDashboard() {
         }
     }, [showTags, showGenres, showCategories]);
     
+    useEffect(() => {
+        if (showRecommendations) {
+            axios.get('http://localhost:8080/bestGamesOfDecade').then(response => {
+                setBestGames(response.data);
+            });
+    
+            axios.get('http://localhost:8080/mostCostEffectiveGames').then(response => {
+                setCostEffectiveGames(response.data);
+            });
+        }
+    }, [showRecommendations]);
+    
 
     const handleGameClick = (game) => {
         axios.get(`http://localhost:8080/gamedetails/${game.id}`).then(response => {
@@ -120,6 +135,16 @@ function GameAnalysisDashboard() {
             <button onClick={() => setShowCategories(prevShow => !prevShow)}>
                 Category Analysis
             </button>
+            <button onClick={() => setShowRecommendations(prev => !prev)}>
+                Recommendation
+            </button>
+            {showRecommendations && (
+                <div>
+                    <h3 style={{ color: 'red' }}>Recommend for you</h3>
+                    <p>Best game of the decade: {bestGames.map(game => `${game.name} (${game.average_score.toFixed(2)})`).join(', ')}</p>
+                    <p>The most cost-effective option: {costEffectiveGames.map(game => `${game.name} (${game.price})`).join(', ')}</p>
+                </div>
+            )}
             {latestTrendVisible && (
                 <div>
                     <h3 style={{ color: 'red' }}>Latest Trend</h3>
