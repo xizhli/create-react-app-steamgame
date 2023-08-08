@@ -498,55 +498,57 @@ const search_games = async function(req, res) {
   console.log(req.query.Tags.split(","));
   */
 
-  const Tags = req.query.Tags ?? '1' ;
-  const Genres = req.query.Genres  ?? '1';
-  const Categories = req.query.Categories ?? '1';
+  var Tags = req.query.Tags ?? '1' ;
+  var Genres = req.query.Genres ??'1';
+  var Categories = req.query.Categories ?? '1';
 
+  if (!Tags){Tags = 1;}
+  if (!Genres) {Genres= 1;}
+  if (!Categories){Categories = 1;}
 
-  if (!include_reviews && !include_recommendation){
-    if (!gameName){
-    connection.query(`
+  if (!gameName){
+    query = `
     SELECT DISTINCT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
     From Game G 
     WHERE G.price BETWEEN ${price_low} AND ${price_high}
     AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
-    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1")
+    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
     AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
     AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
-    `, (err, data) => {
+  `;
+  } else {
+    query = `
+    SELECT DISTINCT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
+    From Game G 
+    WHERE G.price BETWEEN ${price_low} AND ${price_high}
+    AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
+    AND G.name LIKE '%${gameName}%'
+    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
+    AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
+    AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
+    `
+  }
+
+  //console.log(query);
+  if (!include_reviews && !include_recommendation){
+    query += `;`
+    connection.query(query, (err, data) => {
       if (err){
         console.log(err);
         res.json([]);
       } else {
         res.json(data);
-      }})} else{
-        connection.query(`
-        SELECT DISTINCT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
-        From Game G 
-        WHERE G.price BETWEEN ${price_low} AND ${price_high}
-        AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
-        AND G.name LIKE '%${gameName}%'
-        AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
-        AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
-        AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
-        `, (err, data) => {
-          if (err){
-            console.log(err);
-            res.json([]);
-          } else {
-            res.json(data);
-          }})
-      }
+      }})
 
   
   } else if (include_recommendation && !include_reviews){
-
-    connection.query(`
-      SELECT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
-      FROM Game G JOIN Recommendation R on G.id = R.GameID
-      GROUP BY G.id, G.name
-      HAVING SUM(R.recommended) > COUNT(R.recommended)*${recThres};
-    `, (err, data) => {
+    query += ` AND G.id IN
+    (SELECT G.id
+    FROM Game G JOIN Recommendation R on G.id = R.GameID
+    GROUP BY G.id, G.name
+    HAVING SUM(R.recommended) > COUNT(R.recommended)*${recThres});
+  `;
+    connection.query(query, (err, data) => {
       if (err){
         console.log(err);
         res.json([]);
@@ -554,16 +556,16 @@ const search_games = async function(req, res) {
         res.json(data);
       }})
   } else if (!include_recommendation && include_reviews){
-
-    connection.query(`
-    WITH fr as(
+    query += ` AND G.id IN
+    (WITH fr as(
       SELECT GameID
       FROM m_Review
       GROUP BY GameID
       HAVING sum(score) > COUNT(score)*${revThres})
       SELECT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
-      FROM Game G JOIN fr ON  fr.GameID=G.id 
-  `, (err, data) => {
+      FROM Game G JOIN fr ON  fr.GameID=G.id);
+  `
+    connection.query(query, (err, data) => {
     if (err){
       console.log(err);
       res.json([]);
