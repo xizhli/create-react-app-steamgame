@@ -33,6 +33,8 @@ app.get('/categories', routes.getAllCategories);
 app.get('/popularTags', routes.getPopularTags);
 app.get('/popularGenres', routes.getPopularGenres);
 app.get('/popularCategories', routes.getPopularCategories);
+app.get('/bestGamesOfDecade', routes.getBestGamesOfDecade);
+app.get('/mostCostEffectiveGames', routes.getMostCostEffectiveGames);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
