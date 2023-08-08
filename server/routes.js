@@ -468,21 +468,21 @@ const getPopularCategories = (req, res) => {
 
 const getBestGamesOfDecade = async (req, res) => {
   const query = `
-      WITH RankedGames AS (
-          SELECT 
-              G.name, 
-              AVG(R.score) AS average_score,
-              COUNT(R.votes) AS vote_count
-          FROM Game G
-          LEFT JOIN Review R ON G.id = R.GameID
-          WHERE DATE(G.releaseDate) BETWEEN '2010-01-01' AND '2023-12-31' 
-          GROUP BY G.name
-      )
-      SELECT name, average_score
-      FROM RankedGames
-      WHERE average_score > 0.9 AND vote_count > 10000
-      ORDER BY average_score DESC
-      LIMIT 3;
+        WITH RankedGames AS (
+            SELECT
+                G.name,
+                AVG(R.score) AS average_score,
+                COUNT(R.votes) AS vote_count
+            FROM Game G
+            INNER JOIN m_Review R ON G.id = R.GameID
+            WHERE DATE(G.releaseDate) BETWEEN '2010-01-01' AND '2023-12-31'
+            GROUP BY G.name
+            HAVING AVG(R.score) > 0.9 AND COUNT(R.votes) > 10000
+        )
+        SELECT name, average_score
+        FROM RankedGames
+        ORDER BY average_score DESC
+        LIMIT 3;
   `;
 
   connection.query(query, (err, results) => {
@@ -496,22 +496,22 @@ const getBestGamesOfDecade = async (req, res) => {
 
 const getMostCostEffectiveGames = async (req, res) => {
   const query = `
-      WITH RankedGames AS (
-          SELECT 
-              G.name, 
-              G.price,
-              AVG(R.score) AS average_score,
-              COUNT(R.votes) AS vote_count
-          FROM Game G
-          LEFT JOIN Review R ON G.id = R.GameID
-          WHERE G.price < 10
-          GROUP BY G.name, G.price
-      )
-      SELECT name, price, average_score
-      FROM RankedGames
-      WHERE average_score > 0.9 AND vote_count > 10000
-      ORDER BY average_score DESC
-      LIMIT 3;
+        WITH RankedGames AS (
+            SELECT
+                G.name,
+                G.price,
+                AVG(R.score) AS average_score,
+                COUNT(R.votes) AS vote_count
+            FROM Game G
+            INNER JOIN m_Review R ON G.id = R.GameID
+            WHERE G.price < 10
+            GROUP BY G.name, G.price
+            HAVING AVG(R.score) > 0.9 AND COUNT(R.votes) > 10000
+        )
+        SELECT name, price, average_score
+        FROM RankedGames
+        ORDER BY average_score DESC
+        LIMIT 3;
   `;
 
   connection.query(query, (err, results) => {
