@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Container, TableContainer, Table, TableHead, TableBody, TableRow, TableCell, Dialog, DialogContent } from '@mui/material';
+import { Select, MenuItem } from '@mui/material';
 
 function GameAnalysisDashboard() {
     const [games, setGames] = useState([]);
@@ -10,23 +11,51 @@ function GameAnalysisDashboard() {
     const [showTags, setShowTags] = useState(false);
     const [showGenres, setShowGenres] = useState(false);
     const [showCategories, setShowCategories] = useState(false);
+    const [selectedTags, setSelectedTags] = useState([]);
+    const [allTags, setAllTags] = useState([]);
+    const [selectedGenres, setSelectedGenres] = useState([]);
+    const [allGenres, setAllGenres] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState([]);
+    const [allCategories, setAllCategories] = useState([]);
+
 
     useEffect(() => {
         let url = `http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`;
         if (showTags) {
             url += '&showTags=true';
+            if (selectedTags.length) {
+                url += `&selectedTags=${selectedTags.join(',')}`;
+            }
         }
         if (showGenres) {
             url += '&showGenres=true';
+            if (selectedGenres.length) {
+                url += `&selectedGenres=${selectedGenres.join(',')}`;
+            }
         }
         if (showCategories) {
             url += '&showCategories=true';
+            if (selectedCategories.length) {
+                url += `&selectedCategories=${selectedCategories.join(',')}`;
+            }
         }
         axios.get(url).then(response => {
             setGames(response.data);
         });
-    }, [currentPage, showTags, showGenres, showCategories]);
+    }, [currentPage, showTags, showGenres, showCategories, selectedTags, selectedGenres, selectedCategories]);
     
+    useEffect(() => {
+        axios.get('http://localhost:8080/tags').then(response => {
+            setAllTags(response.data);
+        });
+        axios.get('http://localhost:8080/genres').then(response => {
+            setAllGenres(response.data);
+        });
+        axios.get('http://localhost:8080/categories').then(response => {
+            setAllCategories(response.data);
+        });
+    }, []);
+
 
     const handleGameClick = (game) => {
         axios.get(`http://localhost:8080/gamedetails/${game.id}`).then(response => {
@@ -37,6 +66,18 @@ function GameAnalysisDashboard() {
     const handleClosePopup = () => {
         setSelectedGame(null);
     };
+
+    const handleTagChange = (event) => {
+        setSelectedTags(event.target.value);
+    };
+
+    const handleGenreChange = (event) => {
+        setSelectedGenres(event.target.value);
+    };
+    
+    const handleCategoryChange = (event) => {
+        setSelectedCategories(event.target.value);
+    };    
 
     return (
         <Container>
@@ -56,9 +97,39 @@ function GameAnalysisDashboard() {
                         <TableRow>
                             <TableCell>ID</TableCell>
                             <TableCell>Name</TableCell>
-                            {showTags && <TableCell>Tag</TableCell>}
-                            {showGenres && <TableCell>Genre</TableCell>}
-                            {showCategories && <TableCell>Category</TableCell>}
+                            {showTags && 
+                                <TableCell>
+                                    Tag
+                                    <Select multiple value={selectedTags} onChange={handleTagChange}>
+                                        {allTags.map(tag => (
+                                            <MenuItem key={tag} value={tag}>
+                                                {tag}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </TableCell>}
+                            {showGenres && 
+                                <TableCell>
+                                    Genre
+                                    <Select multiple value={selectedGenres} onChange={handleGenreChange}>
+                                        {allGenres.map(genre => (
+                                            <MenuItem key={genre} value={genre}>
+                                                {genre}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </TableCell>}
+                            {showCategories && 
+                                <TableCell>
+                                    Category
+                                    <Select multiple value={selectedCategories} onChange={handleCategoryChange}>
+                                        {allCategories.map(category => (
+                                            <MenuItem key={category} value={category}>
+                                                {category}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
