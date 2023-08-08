@@ -17,7 +17,10 @@ function GameAnalysisDashboard() {
     const [allGenres, setAllGenres] = useState([]);
     const [selectedCategories, setSelectedCategories] = useState([]);
     const [allCategories, setAllCategories] = useState([]);
-
+    const [latestTrendVisible, setLatestTrendVisible] = useState(false);
+    const [popularTags, setPopularTags] = useState([]);
+    const [popularGenres, setPopularGenres] = useState([]);
+    const [popularCategories, setPopularCategories] = useState([]);
 
     useEffect(() => {
         let url = `http://localhost:8080/allgames?page=${currentPage}&limit=${itemsPerPage}`;
@@ -56,6 +59,32 @@ function GameAnalysisDashboard() {
         });
     }, []);
 
+    useEffect(() => {
+        if (showTags || showGenres || showCategories) {
+            setLatestTrendVisible(true);
+            
+            if (showTags) {
+                axios.get('http://localhost:8080/popularTags').then(response => {
+                    setPopularTags(response.data.map(tag => tag.Tag));
+                });
+            }
+    
+            if (showGenres) {
+                axios.get('http://localhost:8080/popularGenres').then(response => {
+                    setPopularGenres(response.data.map(genre => genre.Genre));
+                });
+            }
+    
+            if (showCategories) {
+                axios.get('http://localhost:8080/popularCategories').then(response => {
+                    setPopularCategories(response.data.map(category => category.Category));
+                });
+            }
+        } else {
+            setLatestTrendVisible(false);
+        }
+    }, [showTags, showGenres, showCategories]);
+    
 
     const handleGameClick = (game) => {
         axios.get(`http://localhost:8080/gamedetails/${game.id}`).then(response => {
@@ -91,6 +120,14 @@ function GameAnalysisDashboard() {
             <button onClick={() => setShowCategories(prevShow => !prevShow)}>
                 Category Analysis
             </button>
+            {latestTrendVisible && (
+                <div>
+                    <h3 style={{ color: 'red' }}>Latest Trend</h3>
+                    {showTags && <p>The most popular tag: {popularTags.join(', ')}</p>}
+                    {showGenres && <p>The most popular genre: {popularGenres.join(', ')}</p>}
+                    {showCategories && <p>The most popular category: {popularCategories.join(', ')}</p>}
+                </div>
+            )}
             <TableContainer>
                 <Table>
                     <TableHead>
