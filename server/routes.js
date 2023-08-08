@@ -292,28 +292,44 @@ const getAllGames = async (req, res) => {
   const showGenres = req.query.showGenres === 'true';
   const showCategories = req.query.showCategories === 'true';
 
+  const selectedTags = req.query.selectedTags ? req.query.selectedTags.split(',') : [];
+  const selectedGenres = req.query.selectedGenres ? req.query.selectedGenres.split(',') : [];
+  const selectedCategories = req.query.selectedCategories ? req.query.selectedCategories.split(',') : [];
+
+  // Base query
   let selectClause = "SELECT G.id, G.name";
   let joinClause = "FROM Game G";
+  let whereClause = "WHERE 1=1"; // a placeholder for our conditions
   let groupByClause = "GROUP BY G.id, G.name";
 
   if (showTags) {
       selectClause += ', GROUP_CONCAT(DISTINCT T.Tag ORDER BY T.Tag ASC SEPARATOR \', \') AS Tag';
       joinClause += ' LEFT JOIN Tags T ON G.id = T.GameID';
+      if (selectedTags.length) {
+          whereClause += ` AND T.Tag IN (${selectedTags.map(tag => `'${tag}'`).join(',')})`;
+      }
   }
 
   if (showGenres) {
       selectClause += ', GROUP_CONCAT(DISTINCT GE.Genre ORDER BY GE.Genre ASC SEPARATOR \', \') AS Genre';
       joinClause += ' LEFT JOIN Genres GE ON G.id = GE.GameID';
+      if (selectedGenres.length) {
+          whereClause += ` AND GE.Genre IN (${selectedGenres.map(genre => `'${genre}'`).join(',')})`;
+      }
   }
 
   if (showCategories) {
       selectClause += ', GROUP_CONCAT(DISTINCT C.Category ORDER BY C.Category ASC SEPARATOR \', \') AS Category';
       joinClause += ' LEFT JOIN Categories C ON G.id = C.GameID';
+      if (selectedCategories.length) {
+          whereClause += ` AND C.Category IN (${selectedCategories.map(category => `'${category}'`).join(',')})`;
+      }
   }
 
   const query = `
       ${selectClause}
       ${joinClause}
+      ${whereClause}
       ${groupByClause}
       LIMIT ? OFFSET ?
   `;
@@ -326,7 +342,6 @@ const getAllGames = async (req, res) => {
       res.json(results);
   });
 };
-
 
 const getGameDetails = async (req, res) => {
   const gameId = req.params.gameId;
@@ -355,6 +370,43 @@ const getGameDetails = async (req, res) => {
       res.json(results[0]);
   });
 };
+
+const getAllTags = async (req, res) => {
+  const query = `SELECT DISTINCT Tag FROM Tags ORDER BY Tag ASC`;
+  connection.query(query, (err, data) => {
+      if (err) {
+          console.log(err);
+          res.json([]);
+      } else {
+          res.json(data.map(row => row.Tag));
+      }
+  });
+};
+
+const getAllGenres = async (req, res) => {
+  const query = `SELECT DISTINCT Genre FROM Genres ORDER BY Genre ASC`;
+  connection.query(query, (err, data) => {
+      if (err) {
+          console.log(err);
+          res.json([]);
+      } else {
+          res.json(data.map(row => row.Genre));
+      }
+  });
+};
+
+const getAllCategories = async (req, res) => {
+  const query = `SELECT DISTINCT Category FROM Categories ORDER BY Category ASC`;
+  connection.query(query, (err, data) => {
+      if (err) {
+          console.log(err);
+          res.json([]);
+      } else {
+          res.json(data.map(row => row.Category));
+      }
+  });
+};
+
 
 const search_games = async function(req, res) {
 
@@ -570,5 +622,8 @@ module.exports = {
   topPublishers,
   gameSelection,
   getAllGames,
-  getGameDetails
+  getGameDetails,
+  getAllTags,
+  getAllGenres,
+  getAllCategories
 };
