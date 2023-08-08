@@ -498,20 +498,19 @@ const search_games = async function(req, res) {
   console.log(req.query.Tags.split(","));
   */
 
-  const Tags = req.query.Tags ?? "1";
-  const Genres = req.query.Genres ?? "1";
-  const Categories = req.query.Categories ?? "1";
+  const Tags = req.query.Tags ?? '1' ;
+  const Genres = req.query.Genres  != '' ? req.query.Genres: '1';
+  const Categories = req.query.Categories != '' ? req.query.Categories: '1';
+
 
   if (!include_reviews && !include_recommendation){
     if (!gameName){
     connection.query(`
-    SELECT DISTINCT G.id, G.name
+    SELECT DISTINCT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
     From Game G 
     WHERE G.price BETWEEN ${price_low} AND ${price_high}
     AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
     AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
-    AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
-    AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
     `, (err, data) => {
       if (err){
         console.log(err);
@@ -520,14 +519,14 @@ const search_games = async function(req, res) {
         res.json(data);
       }})} else{
         connection.query(`
-        SELECT DISTINCT G.id, G.name
+        SELECT DISTINCT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
         From Game G 
         WHERE G.price BETWEEN ${price_low} AND ${price_high}
         AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
         AND G.name LIKE '%${gameName}%'
-        AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
-        AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
-        AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
+        AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = 1))
+        AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = 1 ))
+        AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = 1 ))
         `, (err, data) => {
           if (err){
             console.log(err);
@@ -541,7 +540,7 @@ const search_games = async function(req, res) {
   } else if (include_recommendation && !include_reviews){
 
     connection.query(`
-      SELECT G.id, G.name
+      SELECT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
       FROM Game G JOIN Recommendation R on G.id = R.GameID
       GROUP BY G.id, G.name
       HAVING SUM(R.recommended) > COUNT(R.recommended)*${recThres};
@@ -560,7 +559,7 @@ const search_games = async function(req, res) {
       FROM m_Review
       GROUP BY GameID
       HAVING sum(score) > COUNT(score)*${revThres})
-      SELECT G.id, G.name
+      SELECT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
       FROM Game G JOIN fr ON  fr.GameID=G.id 
   `, (err, data) => {
     if (err){
@@ -573,11 +572,11 @@ const search_games = async function(req, res) {
   } else{ //Take route 1, run 6 minutes
     connection.query(`
     WITH dev_popular_games AS (
-      SELECT C.Developer, G.id AS GameID, COUNT(*) as recommend_count
+      SELECT C.Developer, G.id AS GameID, G.name AS name, G.price AS price, G.releaseDate AS releaseDate, COUNT(*) as recommend_count
       FROM Creator C
       JOIN Game G ON C.GameID = G.id
       JOIN Recommendation R ON G.id = R.GameID
-      WHERE R.recommended = true
+      WHERE R.recommended = 1
       GROUP BY C.Developer, G.id
     ),
     dev_max_counts AS (
@@ -586,23 +585,22 @@ const search_games = async function(req, res) {
       GROUP BY Developer
     ),
     dev_top_games AS (
-      SELECT DPG.Developer, DPG.GameID
+      SELECT DPG.Developer, DPG.GameID, DPG.name , DPG.price, DPG.releaseDate
       FROM dev_popular_games DPG
       JOIN dev_max_counts DMC ON DPG.Developer = DMC.Developer AND
       DPG.recommend_count = DMC.max_count
     ),
     dev_game_avg_stats AS (
-      SELECT DTG.Developer,DTG.GameID, G.name, AVG(G.price) as average_price,
+      SELECT DTG.Developer,DTG.GameID, DTG.name, AVG(DTG.price) as average_price, TIMESTAMPDIFF(YEAR, DTG.releaseDate, current_date) AS age,
       AVG(R.score) as average_score, AVG(DPG.recommend_count) as
       average_recommend_count
       FROM dev_top_games DTG
-      JOIN Game G ON DTG.GameID = G.id
-      JOIN Review R ON G.id = R.GameID
+      JOIN m_Review R ON DTG.GameID = R.GameID
       JOIN dev_popular_games DPG ON DTG.GameID = DPG.GameID AND
       DTG.Developer = DPG.Developer
       GROUP BY DTG.Developer
     )
-    SELECT GameID, name FROM dev_game_avg_stats;
+    SELECT DISTINCT GameID As id, name, average_price As price, age FROM dev_game_avg_stats;
     `, (err, data) => {
       if (err){
         console.log(err);
