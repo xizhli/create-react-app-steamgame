@@ -510,7 +510,9 @@ const search_games = async function(req, res) {
     From Game G 
     WHERE G.price BETWEEN ${price_low} AND ${price_high}
     AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
-    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
+    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1")
+    AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = 1 ))
+    AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = 1 ))
     `, (err, data) => {
       if (err){
         console.log(err);
