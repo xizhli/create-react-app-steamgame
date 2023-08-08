@@ -388,9 +388,9 @@ const search_games = async function(req, res) {
   console.log(req.query.Tags.split(","));
   */
 
-  const Tags = req.query.Tags != '' ? req.query.Tags: 1 //.split(",");
-  const Genres = req.query.Genres  != '' ? req.query.Genres: 1//.split(",");
-  const Categories = req.query.Categories != '' ? req.query.Categories: 1 //.split(",");
+  const Tags = req.query.Tags ?? "1";
+  const Genres = req.query.Genres ?? "1";
+  const Categories = req.query.Categories ?? "1";
 
   if (!include_reviews && !include_recommendation){
     if (!gameName){
@@ -399,9 +399,9 @@ const search_games = async function(req, res) {
     From Game G 
     WHERE G.price BETWEEN ${price_low} AND ${price_high}
     AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
-    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = 1))
-    AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = 1 ))
-    AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = 1 ))
+    AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
+    AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
+    AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
     `, (err, data) => {
       if (err){
         console.log(err);
@@ -415,9 +415,9 @@ const search_games = async function(req, res) {
         WHERE G.price BETWEEN ${price_low} AND ${price_high}
         AND TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) BETWEEN ${age_low} AND ${age_high}
         AND G.name LIKE '%${gameName}%'
-        AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = 1))
-        AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = 1 ))
-        AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = 1 ))
+        AND EXISTS (SELECT Tag FROM Tags WHERE Tags.GameID = G.id AND (Tag IN ("${Tags}") OR "${Tags}" = "1"))
+        AND EXISTS (SELECT Genre FROM Genres WHERE Genres.GameID = G.id AND (Genre in ("${Genres}") OR "${Genres}" = "1" ))
+        AND EXISTS (SELECT Category FROM Categories WHERE Categories.GameID = G.id AND (Category IN ("${Categories}") OR "${Categories}" = "1" ))
         `, (err, data) => {
           if (err){
             console.log(err);
