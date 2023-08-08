@@ -30,7 +30,9 @@ app.get('/getCategories', routes.getCategories);
 app.get('/tags', routes.getAllTags);
 app.get('/genres', routes.getAllGenres);
 app.get('/categories', routes.getAllCategories);
-
+app.get('/popularTags', routes.getPopularTags);
+app.get('/popularGenres', routes.getPopularGenres);
+app.get('/popularCategories', routes.getPopularCategories);
 
 app.listen(config.server_port, () => {
   console.log(`Server running at http://${config.server_host}:${config.server_port}/`)
