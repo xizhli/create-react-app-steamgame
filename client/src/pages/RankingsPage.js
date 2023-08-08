@@ -105,7 +105,7 @@ useEffect(() => {
     )*/
     fetch(`http://${config.server_host}:${config.server_port}/search_games?age_low=${age[0]}` +
     `&age_high=${age[1]}&price_low=${price[0]}&price_high=${price[1]}&gameName=${gameName}` +
-    `&include_recommendation=${include_recommendation}&include_reviews=${include_reviews}&rec_threshold=${rec_threshold}&rec_threshold=${rev_threshold}` +
+    `&include_recommendation=${include_recommendation}&include_reviews=${include_reviews}&rec_threshold=${rec_threshold}&rev_threshold=${rev_threshold}` +
     `&Tags=${tagName}&Genres=${genreName}&Categories=${categoryName}`
   )
       .then(res => res.json())
