@@ -124,8 +124,8 @@ useEffect(() => {
   const columns = [
     {field: 'id', headerName: 'GameId', flex:1},
     {field: 'name', headerName: 'Name', flex:1},
-    //{field: 'price', headerName: 'Price'},
-    //{field: 'age', headerName: 'Age'},
+    {field: 'price', headerName: 'Price'},
+    {field: 'age', headerName: 'Age'},
     //{field: 'hoursPlayed', headerName: 'HoursPlayed'},
     //{field: 'reviews', headerName: 'reviews'}
   ]
