@@ -296,10 +296,9 @@ const getAllGames = async (req, res) => {
   const selectedGenres = req.query.selectedGenres ? req.query.selectedGenres.split(',') : [];
   const selectedCategories = req.query.selectedCategories ? req.query.selectedCategories.split(',') : [];
 
-  // Base query
   let selectClause = "SELECT G.id, G.name";
   let joinClause = "FROM Game G";
-  let whereClause = "WHERE 1=1"; // a placeholder for our conditions
+  let whereClause = "WHERE 1=1";
   let groupByClause = "GROUP BY G.id, G.name";
 
   if (showTags) {
@@ -407,6 +406,65 @@ const getAllCategories = async (req, res) => {
   });
 };
 
+const getPopularTags = async (req, res) => {
+  const query = `
+    SELECT Tag, COUNT(DISTINCT GameID) as gameCount
+    FROM Tags
+    JOIN Game ON Game.id = Tags.GameID
+    WHERE DATE(releaseDate) BETWEEN '2019-01-01' AND '2023-12-31'
+    GROUP BY Tag
+    ORDER BY gameCount DESC
+    LIMIT 3;
+  `;
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+    res.json(results);
+  });
+};
+
+const getPopularGenres = (req, res) => {
+  const query = `
+      SELECT Gen.Genre, COUNT(*) AS Count
+      FROM Genres Gen
+      JOIN Game G ON Gen.GameID = G.id
+      WHERE DATE(G.releaseDate) BETWEEN '2019-01-01' AND '2023-12-31'
+      GROUP BY Gen.Genre
+      ORDER BY Count DESC
+      LIMIT 3;
+  `;
+
+  connection.query(query, (err, results) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Internal Server Error' });
+      }
+      res.json(results);
+  });
+};
+
+const getPopularCategories = (req, res) => {
+  const query = `
+      SELECT C.Category, COUNT(*) AS Count
+      FROM Categories C
+      JOIN Game G ON C.GameID = G.id
+      WHERE DATE(G.releaseDate) BETWEEN '2019-01-01' AND '2023-12-31'
+      GROUP BY C.Category
+      ORDER BY Count DESC
+      LIMIT 3;
+  `;
+
+  connection.query(query, (err, results) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Internal Server Error' });
+      }
+      res.json(results);
+  });
+};
 
 const search_games = async function(req, res) {
 
@@ -625,5 +683,8 @@ module.exports = {
   getGameDetails,
   getAllTags,
   getAllGenres,
-  getAllCategories
+  getAllCategories,
+  getPopularTags,
+  getPopularGenres,
+  getPopularCategories
 };
