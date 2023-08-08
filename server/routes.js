@@ -619,7 +619,7 @@ const search_games = async function(req, res) {
       FROM m_Review
       GROUP BY GameID
       HAVING sum(score) > COUNT(score)*${revThres})
-      SELECT G.id, G.name, G.price,TIMESTAMPDIFF(YEAR, G.releaseDate, current_date) AS age
+      SELECT G.id
       FROM Game G JOIN fr ON  fr.GameID=G.id);
   `
     connection.query(query, (err, data) => {
@@ -630,39 +630,23 @@ const search_games = async function(req, res) {
       res.json(data);
     }})
 
-  } else{ //Take route 1, run 6 minutes
-    connection.query(`
-    WITH dev_popular_games AS (
-      SELECT C.Developer, G.id AS GameID, G.name AS name, G.price AS price, G.releaseDate AS releaseDate, COUNT(*) as recommend_count
-      FROM Creator C
-      JOIN Game G ON C.GameID = G.id
-      JOIN Recommendation R ON G.id = R.GameID
-      WHERE R.recommended = 1
-      GROUP BY C.Developer, G.id
-    ),
-    dev_max_counts AS (
-      SELECT Developer, MAX(recommend_count) as max_count
-      FROM dev_popular_games
-      GROUP BY Developer
-    ),
-    dev_top_games AS (
-      SELECT DPG.Developer, DPG.GameID, DPG.name , DPG.price, DPG.releaseDate
-      FROM dev_popular_games DPG
-      JOIN dev_max_counts DMC ON DPG.Developer = DMC.Developer AND
-      DPG.recommend_count = DMC.max_count
-    ),
-    dev_game_avg_stats AS (
-      SELECT DTG.Developer,DTG.GameID, DTG.name, AVG(DTG.price) as average_price, TIMESTAMPDIFF(YEAR, DTG.releaseDate, current_date) AS age,
-      AVG(R.score) as average_score, AVG(DPG.recommend_count) as
-      average_recommend_count
-      FROM dev_top_games DTG
-      JOIN m_Review R ON DTG.GameID = R.GameID
-      JOIN dev_popular_games DPG ON DTG.GameID = DPG.GameID AND
-      DTG.Developer = DPG.Developer
-      GROUP BY DTG.Developer
-    )
-    SELECT DISTINCT GameID As id, name, average_price As price, age FROM dev_game_avg_stats;
-    `, (err, data) => {
+  } else{ 
+    query += ` AND G.id IN
+    (SELECT G.id
+    FROM Game G JOIN Recommendation R on G.id = R.GameID
+    GROUP BY G.id, G.name
+    HAVING SUM(R.recommended) > COUNT(R.recommended)*${recThres})
+  `
+  query += ` AND G.id IN
+  (WITH fr as(
+    SELECT GameID
+    FROM m_Review
+    GROUP BY GameID
+    HAVING sum(score) > COUNT(score)*${revThres})
+    SELECT G.id
+    FROM Game G JOIN fr ON  fr.GameID=G.id);
+`
+    connection.query(query, (err, data) => {
       if (err){
         console.log(err);
         res.json([]);
@@ -674,21 +658,6 @@ const search_games = async function(req, res) {
 
 }
 
-const getTags = async function (req, res) {
-  const query = `
-  SELECT DISTINCT Tag
-  FROM Tags
-  ORDER BY Tag
-  `
-  connection.query(query, (err, data) => {
-    if (err){
-      console.log(err);
-      res.json([]);
-    } else {
-      res.json(data);
-    }
-  });
-};
 
 const getGenres = async function (req, res) {
   const query = `
