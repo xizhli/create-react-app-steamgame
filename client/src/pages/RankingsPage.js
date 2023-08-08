@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Button, Checkbox, Container, FormControlLabel, Grid, Link, Slider, TextField, FormGroup } from '@mui/material';
+import { Button, Checkbox, Container, FormControlLabel, Grid, Link, Slider, TextField, FormGroup, FormControl, InputLabel,OutlinedInput, MenuItem} from '@mui/material';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { DataGrid } from '@mui/x-data-grid';
 
 
@@ -29,10 +30,64 @@ export default function Rankings() {
 
   const [rev_threshold, setRevThres] = useState(0.5);
 
+
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
+
+const [tagName, setTagName] = useState([]);
+const [t_names, setT_Names] = useState([]);
+
+const[genreName, setGenreName] = useState([]);
+const[g_names, setG_Names] = useState([]);
+
+const[categoryName, setCatName] = useState([]);
+const[c_names, setC_Names] = useState([]);
+
+useEffect(() => {
+  fetch(`http://${config.server_host}:${config.server_port}/getTags`)
+    .then(res => res.json())
+    .then(resJson =>
+      {const tag_lst = [];
+      for(var i in resJson)
+         tag_lst.push(resJson[i]['Tag']);
+         //console.log(tag_lst);
+      setT_Names(tag_lst);
+    });
+}, []);
+
+useEffect(() => {
+  fetch(`http://${config.server_host}:${config.server_port}/getGenres`)
+    .then(res => res.json())
+    .then(resJson =>
+      {const genre_lst = [];
+      for(var i in resJson)
+         genre_lst.push(resJson[i]['Genre']);
+      setG_Names(genre_lst);
+    });
+}, []);
+
+useEffect(() => {
+  fetch(`http://${config.server_host}:${config.server_port}/getCategories`)
+    .then(res => res.json())
+    .then(resJson =>
+      {const cat_lst = [];
+      for(var i in resJson)
+         cat_lst.push(resJson[i]['Category']);
+      setC_Names(cat_lst);
+    });
+}, []);
+
+
   
-
-
-
   useEffect(() => {
     fetch(`http://${config.server_host}:${config.server_port}/search_games`)
       .then(res => res.json())
@@ -49,8 +104,9 @@ export default function Rankings() {
       `&include_recommendation=${include_recommendation}&include_reviews=${include_reviews}&recBool=${recBool}&revBool=${revBool}&gameName=${gameName}` 
     )*/
     fetch(`http://${config.server_host}:${config.server_port}/search_games?age_low=${age[0]}` +
-    `&age_high=${age[1]}&price_low=${price[0]}&price_high=${price[1]}` +
-    `&include_recommendation=${include_recommendation}&include_reviews=${include_reviews}&rec_threshold=${rec_threshold}&rec_threshold=${rev_threshold}` 
+    `&age_high=${age[1]}&price_low=${price[0]}&price_high=${price[1]}&gameName=${gameName}` +
+    `&include_recommendation=${include_recommendation}&include_reviews=${include_reviews}&rec_threshold=${rec_threshold}&rec_threshold=${rev_threshold}` +
+    `&Tags=${tagName}&Genres=${genreName}&Categories=${categoryName}`
   )
       .then(res => res.json())
       .then(resJson => {
@@ -99,6 +155,92 @@ export default function Rankings() {
           control={<Checkbox checked={include_reviews} onChange={(e) => setRev(e.target.checked)} />}
           />
           </FormGroup>
+        </Grid>
+        <Grid>
+        <FormControl sx={{ m: 1, width: 300 }}>
+        <InputLabel>Tags</InputLabel>
+        <Select
+          multiple
+          value={tagName}
+          onChange={(e) => {
+            const {
+              target: { value },
+            } = e;
+            setTagName(
+              // On autofill we get a stringified value.
+              typeof value === 'string' ? value.split(',') : value,
+            );
+          } }
+          //input={<OutlinedInput label="Tags" />}
+          MenuProps={MenuProps}
+        >
+          {t_names.map((name) => (
+            <MenuItem
+              key={name}
+              value={name}
+            >
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+        </Grid>
+        <Grid>
+        <FormControl sx={{ m: 1, width: 300 }}>
+        <InputLabel>Genre</InputLabel>
+        <Select
+          multiple
+          value={genreName}
+          onChange={(e) => {
+            const {
+              target: { value },
+            } = e;
+            setGenreName(
+              // On autofill we get a stringified value.
+              typeof value === 'string' ? value.split(',') : value,
+            );
+          } }
+          //input={<OutlinedInput label="Tags" />}
+          MenuProps={MenuProps}
+        >
+          {g_names.map((name) => (
+            <MenuItem
+              key={name}
+              value={name}
+            >
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+        </Grid>
+        <Grid>
+        <FormControl sx={{ m: 1, width: 300 }}>
+        <InputLabel>Category</InputLabel>
+        <Select
+          multiple
+          value={categoryName}
+          onChange={(e) => {
+            const {
+              target: { value },
+            } = e;
+            setCatName(
+              typeof value === 'string' ? value.split(',') : value,
+            );
+          } }
+          //input={<OutlinedInput label="Tags" />}
+          MenuProps={MenuProps}
+        >
+          {c_names.map((name) => (
+            <MenuItem
+              key={name}
+              value={name}
+            >
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
         </Grid>
         <Grid item xs={6}>
           <p>Age</p>
