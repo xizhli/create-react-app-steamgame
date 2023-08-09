@@ -694,7 +694,7 @@ const getCategories = async function (req, res) {
 module.exports = {
   games,
   random,
-  getTags,
+  // getTags,
   getGenres,
   getCategories,
   search_games,

@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "scripts": {
+    "server": "nodemon --quiet server",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "name": "repo1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
